@@ -1,3 +1,7 @@
+Apenas atualizado para funcionar na VRP e traduzido para português
+
+Testado com o mysql aSync
+
 ### [Downloads page](https://github.com/N3MTV/gcphone/releases)
 
 <h2 align="center">Téléphone pour FiveM</h2>
