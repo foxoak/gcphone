@@ -8,7 +8,6 @@ Baixar gcphone.zip para pegar a pasta "html" do ultimo release https://github.co
 start mysql-async
 start gcphone
 start vrp_addons_gcphone
--------------------------
 
 ### [Downloads page](https://github.com/N3MTV/gcphone/releases)
 
