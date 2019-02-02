@@ -56,9 +56,9 @@ client_script {
 }
 
 server_script {
+	'@vrp/lib/utils.lua',
 	'@mysql-async/lib/MySQL.lua',
 	"config.lua",
 	"server/server.lua",
-
 	"server/app_tchat.lua",
 }

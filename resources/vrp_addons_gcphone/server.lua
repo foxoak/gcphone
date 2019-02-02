@@ -1,5 +1,9 @@
+local Tunnel = module("vrp", "lib/Tunnel")
+local Proxy = module("vrp", "lib/Proxy")
 
-ESX                       = nil
+vRP = Proxy.getInterface("vRP")
+vRPclient = Tunnel.getInterface("vRP","vrp_addon_gcphone")
+
 local PhoneNumbers        = {}
 
 -- PhoneNumbers = {
@@ -10,10 +14,6 @@ local PhoneNumbers        = {}
 --     }
 --   }
 -- }
-
-TriggerEvent('esx:getSharedObject', function(obj)
-  ESX = obj
-end)
 
 
 function notifyAlertSMS (number, alert, listSrc)
@@ -36,7 +36,7 @@ function notifyAlertSMS (number, alert, listSrc)
 end
 
 
-
+--[[
 AddEventHandler('esx_phone:registerNumber', function(number, type, sharePos, hasDispatch, hideNumber, hidePosIfAnon)
   print('==== Enregistrement du telephone ' .. number .. ' => ' .. type)
 	local hideNumber    = hideNumber    or false
@@ -59,18 +59,28 @@ AddEventHandler('esx:setJob', function(source, job, lastJob)
     TriggerEvent('esx_addons_gcphone:addSource', job.name, source)
   end
 end)
+]]
 
-AddEventHandler('esx_addons_gcphone:addSource', function(number, source)
+AddEventHandler('vrp_addons_gcphone:addSource', function(number, source)
 	PhoneNumbers[number].sources[tostring(source)] = true
 end)
 
-AddEventHandler('esx_addons_gcphone:removeSource', function(number, source)
+AddEventHandler('vrp_addons_gcphone:removeSource', function(number, source)
 	PhoneNumbers[number].sources[tostring(source)] = nil
 end)
 
 
-RegisterServerEvent('esx_addons_gcphone:startCall')
-AddEventHandler('esx_addons_gcphone:startCall', function (number, message, coords)
+RegisterServerEvent('vrp_addons_gcphone:startCall')
+AddEventHandler('vrp_addons_gcphone:startCall', function (number, message, coords)
+
+  local source = source
+  local user_id = vRP.getUserId({source})
+  local player = vRP.getUserSource({user_id})
+
+  vRPclient.notify(player,{"Seu chamado foi solicitado a um "..number})
+  vRP.sendServiceAlert({source, number,coords.x,coords.y,coords.z,message})
+
+--[[
   local source = source
   if PhoneNumbers[number] ~= nil then
     getPhoneNumber(source, function (phone) 
@@ -82,23 +92,23 @@ AddEventHandler('esx_addons_gcphone:startCall', function (number, message, coord
     end)
   else
     print('Appels sur un service non enregistre => numero : ' .. number)
-  end
+  end]]
 end)
 
 
-AddEventHandler('esx:playerLoaded', function(source)
+AddEventHandler('playerSpawned', function(source)
 
-  local xPlayer = ESX.GetPlayerFromId(source)
+  local xPlayer = vRP.getUserId({source})
 
-  MySQL.Async.fetchAll('SELECT * FROM users WHERE identifier = @identifier',{
+  MySQL.Async.fetchAll('SELECT * FROM vrp_user_identities WHERE user_id = @identifier',{
     ['@identifier'] = xPlayer.identifier
   }, function(result)
 
-    local phoneNumber = result[1].phone_number
+    local phoneNumber = result[1].phone
     xPlayer.set('phoneNumber', phoneNumber)
 
     if PhoneNumbers[xPlayer.job.name] ~= nil then
-      TriggerEvent('esx_addons_gcphone:addSource', xPlayer.job.name, source)
+      TriggerEvent('vrp_addons_gcphone:addSource', xPlayer.job.name, source)
     end
   end)
 
@@ -107,23 +117,21 @@ end)
 
 AddEventHandler('esx:playerDropped', function(source)
   local source = source
-  local xPlayer = ESX.GetPlayerFromId(source)
+  local xPlayer = vRP.getUserId({source})
   if PhoneNumbers[xPlayer.job.name] ~= nil then
-    TriggerEvent('esx_addons_gcphone:removeSource', xPlayer.job.name, source)
+    TriggerEvent('vrp_addons_gcphone:removeSource', xPlayer.job.name, source)
   end
 end)
 
 
 function getPhoneNumber (source, callback) 
-  print('get phone to ' .. source)
-  local xPlayer = ESX.GetPlayerFromId(source)
-  if xPlayer == nil then
-    print('esx_addons_gcphone. source null ???')
+  local user_id = vRP.getUserId({source})
+  if user_id == nil then
     callback(nil)
   end
-  MySQL.Async.fetchAll('SELECT * FROM users WHERE identifier = @identifier',{
-    ['@identifier'] = xPlayer.identifier
+  MySQL.Async.fetchAll('SELECT * FROM vrp_user_identities WHERE user_id  = @identifier',{
+    ['@identifier'] = user_id
   }, function(result)
-    callback(result[1].phone_number)
+    callback(result[1].phone)
   end)
 end

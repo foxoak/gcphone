@@ -1,3 +1,9 @@
+local Tunnel = module("vrp", "lib/Tunnel")
+local Proxy = module("vrp", "lib/Proxy")
+
+vRP = Proxy.getInterface("vRP")
+vRPclient = Tunnel.getInterface("vRP","gcphone")
+
 --====================================================================================
 -- #Author: Jonathan D @Gannon
 -- #Version 2.0
@@ -9,7 +15,7 @@ math.randomseed(os.time())
 function getPhoneRandomNumber()
     local numBase0 = math.random(100,999)
     local numBase1 = math.random(0,9999)
-    local num = string.format("%03d-%04d", numBase0, numBase1 )
+    local num = string.format("%03d%04d", numBase0, numBase1 )
 	return num
 end
 
@@ -22,41 +28,34 @@ end
 --  Utils
 --====================================================================================
 function getSourceFromIdentifier(identifier, cb)
-    TriggerEvent("es:getPlayers", function(users)
-        for k , user in pairs(users) do
-            if (user.getIdentifier ~= nil and user.getIdentifier() == identifier) or (user.identifier == identifier) then
-                cb(k)
-                return
-            end
-        end
-    end)
-    cb(nil)
+    return vRP.getUserSource({identifier})
+
 end
 function getNumberPhone(identifier)
-    local result = MySQL.Sync.fetchAll("SELECT users.phone_number FROM users WHERE users.identifier = @identifier", {
+    local result = MySQL.Sync.fetchAll("SELECT vrp_user_identities.phone FROM vrp_user_identities WHERE vrp_user_identities.user_id = @identifier", {
         ['@identifier'] = identifier
     })
     if result[1] ~= nil then
-        return result[1].phone_number
+        return result[1].phone
     end
     return nil
 end
 function getIdentifierByPhoneNumber(phone_number) 
-    local result = MySQL.Sync.fetchAll("SELECT users.identifier FROM users WHERE users.phone_number = @phone_number", {
+    local result = MySQL.Sync.fetchAll("SELECT vrp_user_identities.user_id FROM vrp_user_identities WHERE vrp_user_identities.phone = @phone_number", {
         ['@phone_number'] = phone_number
     })
     if result[1] ~= nil then
-        return result[1].identifier
+        return result[1].user_id
     end
     return nil
 end
 
 
 function getPlayerID(source)
-    local identifiers = GetPlayerIdentifiers(source)
-    local player = getIdentifiant(identifiers)
+    local player = vRP.getUserId({source})
     return player
 end
+
 function getIdentifiant(id)
     for _, v in ipairs(id) do
         return v
@@ -73,7 +72,7 @@ function getOrGeneratePhoneNumber (sourcePlayer, identifier, cb)
             myPhoneNumber = getPhoneRandomNumber()
             local id = getIdentifierByPhoneNumber(myPhoneNumber)
         until id == nil
-        MySQL.Async.insert("UPDATE users SET phone_number = @myPhoneNumber WHERE identifier = @identifier", { 
+        MySQL.Async.insert("UPDATE vrp_user_identities SET phone = @myPhoneNumber WHERE user_id = @identifier", { 
             ['@myPhoneNumber'] = myPhoneNumber,
             ['@identifier'] = identifier
         }, function ()
@@ -158,7 +157,7 @@ end)
 --  Messages
 --====================================================================================
 function getMessages(identifier)
-    local result = MySQL.Sync.fetchAll("SELECT phone_messages.* FROM phone_messages LEFT JOIN users ON users.identifier = @identifier WHERE phone_messages.receiver = users.phone_number", {
+    local result = MySQL.Sync.fetchAll("SELECT phone_messages.* FROM phone_messages LEFT JOIN vrp_user_identities ON vrp_user_identities.user_id = @identifier WHERE phone_messages.receiver = vrp_user_identities.phone", {
          ['@identifier'] = identifier
     })
     return result
@@ -187,14 +186,14 @@ function addMessage(source, identifier, phone_number, message)
     local sourcePlayer = tonumber(source)
     local otherIdentifier = getIdentifierByPhoneNumber(phone_number)
     local myPhone = getNumberPhone(identifier)
-    if otherIdentifier ~= nil then 
+    if otherIdentifier ~= nil and vRP.getUserSource({otherIdentifier}) ~= nil then 
         local tomess = _internalAddMessage(myPhone, phone_number, message, 0)
-        getSourceFromIdentifier(otherIdentifier, function (osou)
-            if tonumber(osou) ~= nil then 
+--        getSourceFromIdentifier(otherIdentifier, function (osou)
+  --          if tonumber(osou) ~= nil then 
                 -- TriggerClientEvent("gcPhone:allMessage", osou, getMessages(otherIdentifier))
-                TriggerClientEvent("gcPhone:receiveMessage", tonumber(osou), tomess)
-            end
-        end) 
+                TriggerClientEvent("gcPhone:receiveMessage", tonumber(vRP.getUserSource({otherIdentifier})), tomess)
+    --        end
+    --    end) 
     end
     local memess = _internalAddMessage(phone_number, myPhone, message, 1)
     TriggerClientEvent("gcPhone:receiveMessage", sourcePlayer, memess)
@@ -257,6 +256,7 @@ end)
 
 RegisterServerEvent('gcPhone:setReadMessageNumber')
 AddEventHandler('gcPhone:setReadMessageNumber', function(num)
+    local sourcePlayer = tonumber(source)  
     local identifier = getPlayerID(source)
     setReadMessageNumber(identifier, num)
 end)
@@ -383,8 +383,10 @@ AddEventHandler('gcPhone:internal_startCall', function(source, phone_number, rtc
     
 
     if is_valid == true then
-        getSourceFromIdentifier(destPlayer, function (srcTo)
-            if srcTo ~= nill then
+        --getSourceFromIdentifier(destPlayer, function (srcTo)
+        if vRP.getUserSource({destPlayer}) ~= nil then
+            srcTo = tonumber(vRP.getUserSource({destPlayer}))
+            if srcTo ~= nil then
                 AppelsEnCours[indexCall].receiver_src = srcTo
                 TriggerEvent('gcPhone:addCall', AppelsEnCours[indexCall])
                 TriggerClientEvent('gcPhone:waitingCall', sourcePlayer, AppelsEnCours[indexCall], true)
@@ -393,7 +395,7 @@ AddEventHandler('gcPhone:internal_startCall', function(source, phone_number, rtc
                 TriggerEvent('gcPhone:addCall', AppelsEnCours[indexCall])
                 TriggerClientEvent('gcPhone:waitingCall', sourcePlayer, AppelsEnCours[indexCall], true)
             end
-        end)
+        end
     else
         TriggerEvent('gcPhone:addCall', AppelsEnCours[indexCall])
         TriggerClientEvent('gcPhone:waitingCall', sourcePlayer, AppelsEnCours[indexCall], true)
@@ -535,7 +537,8 @@ end)
 --====================================================================================
 --  OnLoad
 --====================================================================================
-AddEventHandler('es:playerLoaded',function(source)
+RegisterServerEvent('playerSpawned')
+AddEventHandler('playerSpawned', function()
     local sourcePlayer = tonumber(source)
     local identifier = getPlayerID(source)
     getOrGeneratePhoneNumber(sourcePlayer, identifier, function (myPhoneNumber)
