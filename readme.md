@@ -2,6 +2,13 @@ Apenas atualizado para funcionar na VRP e traduzido para português
 
 Testado com o mysql aSync
 
+Baixar gcphone.zip para pegar a pasta "html" do ultimo release https://github.com/N3MTV/gcphone/releases
+
+*-*-* Server.cfg
+start mysql-async
+start gcphone
+start vrp_addons_gcphone
+
 ### [Downloads page](https://github.com/N3MTV/gcphone/releases)
 
 <h2 align="center">Téléphone pour FiveM</h2>

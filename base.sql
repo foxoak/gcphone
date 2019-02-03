@@ -12,7 +12,6 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 
 
-
 -- Export de la structure de la table gtarp. phone_app_chat
 CREATE TABLE IF NOT EXISTS `phone_app_chat` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
