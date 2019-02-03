@@ -1,4 +1,4 @@
--- --------------------------------------------------------
+﻿-- --------------------------------------------------------
 -- Hôte :                        127.0.0.1
 -- Version du serveur:           10.3.7-MariaDB - mariadb.org binary distribution
 -- SE du serveur:                Win64
@@ -11,8 +11,6 @@
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 
-
-ALTER TABLE `users` ADD COLUMN `phone_number` VARCHAR(10) NULL;
 
 
 -- Export de la structure de la table gtarp. phone_app_chat
