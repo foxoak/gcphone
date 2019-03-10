@@ -3,6 +3,7 @@ import Vuex from 'vuex'
 
 import phone from './modules/phone'
 import contacts from './modules/contacts'
+import faturas from './modules/faturas'
 import messages from './modules/messages'
 import appels from './modules/appels'
 import bank from './modules/bank'
@@ -15,6 +16,7 @@ export default new Vuex.Store({
   modules: {
     phone,
     contacts,
+    faturas,
     messages,
     appels,
     bank,

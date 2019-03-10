@@ -7,6 +7,9 @@ import Menu from '@/components/Menu'
 import Contacts from '@/components/Contacts/Contacts'
 import Contact from '@/components/Contacts/Contact'
 
+import Faturas from '@/components/Faturas/Faturas'
+import Fatura from '@/components/Faturas/Fatura'
+
 import MessagesList from '@/components/Messages/MessagesList'
 import Messages from '@/components/Messages/Messages'
 import MessageContactsSelect from '@/components/Messages/MessageContactsSelect'
@@ -49,6 +52,16 @@ export default new Router({
       path: '/contact/:id',
       name: 'contacts.view',
       component: Contact
+    },
+    {
+      path: '/faturas',
+      name: 'faturas',
+      component: Faturas
+    },
+    {
+      path: '/fatura/:id',
+      name: 'faturas.view',
+      component: Fatura
     },
     {
       path: '/messages',

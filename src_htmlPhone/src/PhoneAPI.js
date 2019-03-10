@@ -60,7 +60,15 @@ class PhoneAPI {
   async deleteContact (id) {
     return this.post('deleteContact', { id })
   }
-
+  async updateFatura (id, display, phoneNumber) {
+    return this.post('updateFatura', { id, display, phoneNumber })
+  }
+  async addFatura (display, phoneNumber) {
+    return this.post('addFatura', { display, phoneNumber })
+  }
+  async deleteFatura (id) {
+    return this.post('deleteFatura', { id })
+  }
   // == Gestion des appels
   async appelsDeleteHistorique (numero) {
     return this.post('appelsDeleteHistorique', { numero })
@@ -99,6 +107,8 @@ class PhoneAPI {
     store.dispatch('resetMessage')
     console.log('resetContact')
     store.dispatch('resetContact')
+    console.log('resetFatura')
+    store.dispatch('resetFatura')
     console.log('resetBourse')
     store.dispatch('resetBourse')
     console.log('resetAppels')
@@ -151,6 +161,9 @@ class PhoneAPI {
   }
   onupdateContacts (data) {
     store.commit('SET_CONTACTS', data.contacts)
+  }
+  onupdateFaturas (data) {
+    store.commit('SET_FATURAS', data.faturas)
   }
   onhistoriqueCall (data) {
     store.commit('SET_APPELS_HISTORIQUE', data.historique)

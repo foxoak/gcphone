@@ -118,6 +118,12 @@
       "name": "Paramètres",
       "icons": "/html/static/img/icons_app/settings.png",
       "routeName": "parametre",
+      "inHomePage": false
+    },
+    {
+      "name": "Faturas",
+      "icons": "/html/static/img/icons_app/bank.png",
+      "routeName": "faturas",
       "inHomePage": true
     },
     {
